@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         execute.submit(takePicture);
     }
 
-    
+
 
     public void saveImg(Bitmap bitmap){
         File dir = new File(Environment.getExternalStorageDirectory().toString()+
