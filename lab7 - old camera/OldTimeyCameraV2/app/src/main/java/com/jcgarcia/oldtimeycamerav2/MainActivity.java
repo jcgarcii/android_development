@@ -3,6 +3,7 @@ package com.jcgarcia.oldtimeycamerav2;
 import static android.hardware.Camera.open;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.HandlerCompat;
 
 import android.app.Activity;
 import android.app.Application;
@@ -10,6 +11,7 @@ import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -20,10 +22,10 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-    private threadedApplication threadedApp = (threadedApplication) getApplication();
     private ExecutorService execute;
     private Handler threadedHandler;
     private Camera camera;
@@ -41,8 +43,9 @@ public class MainActivity extends AppCompatActivity {
         mHolder = surface.getHolder();
 
         //Assign the Instances of the Threadpool:
-        execute = threadedApp.executorService;
-        threadedHandler = threadedApp.mainThreadHandler;
+        execute = Executors.newSingleThreadExecutor();
+        threadedHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+
     }
 
     @Override
@@ -57,10 +60,10 @@ public class MainActivity extends AppCompatActivity {
                 _openCameraFlag = 1;
                 try {
                     camera.setPreviewDisplay(mHolder);
+                    camera.startPreview();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                camera.startPreview();
             }
         };
 
@@ -133,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         super.onPause();
+        _openCameraFlag = 0;
         camera.stopPreview();
         camera.release();
     }
