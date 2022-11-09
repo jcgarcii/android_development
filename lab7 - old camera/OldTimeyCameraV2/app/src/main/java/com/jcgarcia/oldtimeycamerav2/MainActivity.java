@@ -3,15 +3,24 @@ package com.jcgarcia.oldtimeycamerav2;
 import static android.hardware.Camera.open;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.HandlerCompat;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -19,7 +28,14 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,7 +48,10 @@ public class MainActivity extends AppCompatActivity {
     private Camera.Parameters cameraParameters;
     public SurfaceView surface;
     public SurfaceHolder mHolder;
+    public Camera.PictureCallback jpeg;
     public int _openCameraFlag = 0;
+    public Bitmap bitmap;
+    public Uri uri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         mHolder = surface.getHolder();
 
         //Assign the Instances of the Threadpool:
-        execute = Executors.newSingleThreadExecutor();
+        execute = Executors.newFixedThreadPool(4);
         threadedHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
     }
@@ -100,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception e){
             Log.e("OldTimeyCameara", Log.getStackTraceString(e));
         }
+        camera.setDisplayOrientation(90);
     }
 
     public static void setCameraDisplayOrientation(Activity activity,
@@ -127,18 +147,60 @@ public class MainActivity extends AppCompatActivity {
         camera.setDisplayOrientation(result);
     }
 
-    public void onTakePictureClicked(View view){
-        if(_openCameraFlag == 1){
-            camera.takePicture(null, null, null, null);
+    public void onTakePictureClicked(){
+        Runnable takePicture = new Runnable() {
+            @Override
+            public void run() {
+                if(_openCameraFlag == 1){
+                    camera.takePicture(null, null, null, jpeg);
+                }
+            }
+        };
+        execute.submit(takePicture);
+    }
+
+    
+
+    public void saveImg(Bitmap bitmap){
+        File dir = new File(Environment.getExternalStorageDirectory().toString()+
+                '/'+getString(R.string.app_name));
+
+        if(!dir.exists()){dir.mkdirs();}
+        String name = System.currentTimeMillis() + ".png";
+        File file = new File(dir, name);
+        try{
+            saveToStream(bitmap, new FileOutputStream(file));
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
+            this.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void saveToStream(Bitmap bitmap, OutputStream outputStream){
+        if(outputStream != null){
+            try{
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public void onPause(){
         super.onPause();
-        _openCameraFlag = 0;
-        camera.stopPreview();
-        camera.release();
+        Runnable pause = new Runnable() {
+            @Override
+            public void run() {
+                _openCameraFlag = 0;
+                camera.stopPreview();
+                camera.release();
+            }
+        };
+        execute.submit(pause);
     }
+
 
 }
