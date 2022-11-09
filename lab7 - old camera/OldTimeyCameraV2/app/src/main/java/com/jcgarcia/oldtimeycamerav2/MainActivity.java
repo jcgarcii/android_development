@@ -17,6 +17,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
@@ -42,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
         //Assign the Instances of the Threadpool:
         execute = threadedApp.executorService;
         threadedHandler = threadedApp.mainThreadHandler;
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
 
         //Start Camera
         Runnable runnable = new Runnable() {
@@ -49,13 +55,17 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 openCamera();
                 _openCameraFlag = 1;
+                try {
+                    camera.setPreviewDisplay(mHolder);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                camera.startPreview();
             }
         };
 
         execute.submit(runnable);
-
     }
-
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -112,6 +122,19 @@ public class MainActivity extends AppCompatActivity {
             result = (info.orientation - degrees + 360) % 360;
         }
         camera.setDisplayOrientation(result);
+    }
+
+    public void onTakePictureClicked(View view){
+        if(_openCameraFlag == 1){
+            camera.takePicture(null, null, null, null);
+        }
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        camera.stopPreview();
+        camera.release();
     }
 
 }

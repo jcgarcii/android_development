@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Old Timey Camera (V2)</string>
+    <string name="image">Take Picture</string>
 </resources>
