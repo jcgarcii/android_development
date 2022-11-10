@@ -1,6 +1,8 @@
 package com.jcgarcia.oldtimeycamerav2;
 
+import static android.hardware.Camera.ACTION_NEW_PICTURE;
 import static android.hardware.Camera.open;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -10,6 +12,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -26,6 +29,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -36,6 +40,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,10 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private Camera.Parameters cameraParameters;
     public SurfaceView surface;
     public SurfaceHolder mHolder;
-    public Camera.PictureCallback jpeg;
     public int _openCameraFlag = 0;
-    public Bitmap bitmap;
-    public Uri uri;
+    public static final String ACTION_NEW_PICTURE = Camera.ACTION_NEW_PICTURE;
+    public Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,17 +67,19 @@ public class MainActivity extends AppCompatActivity {
 
         surface = findViewById(R.id.surfaceView);
         mHolder = surface.getHolder();
+        button = findViewById(R.id.button);
 
         //Assign the Instances of the Threadpool:
         execute = Executors.newFixedThreadPool(4);
         threadedHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+
+        button.setOnClickListener(click);
 
     }
 
     @Override
     public void onResume(){
         super.onResume();
-
         //Start Camera
         Runnable runnable = new Runnable() {
             @Override
@@ -89,6 +98,13 @@ public class MainActivity extends AppCompatActivity {
         execute.submit(runnable);
     }
 
+    private View.OnClickListener click = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            onTakePictureClicked();
+        }
+    };
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -104,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "open the camera", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
     public void openCamera(){
         try{
@@ -147,46 +165,63 @@ public class MainActivity extends AppCompatActivity {
         camera.setDisplayOrientation(result);
     }
 
-    public void onTakePictureClicked(){
+    public void onTakePictureClicked() {
         Runnable takePicture = new Runnable() {
             @Override
             public void run() {
-                if(_openCameraFlag == 1){
-                    camera.takePicture(null, null, null, jpeg);
-                }
+                Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
+                    @Override
+                    public void onPictureTaken(byte[] bytes, Camera camera) {
+                        File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+                        if (file == null) {
+                            Log.e("TAG", "Unable to store images");
+                            return;
+                        }
+                        try {
+                            FileOutputStream fos = new FileOutputStream(file);
+                            fos.write(bytes);
+                            fos.close();
+                        } catch (FileNotFoundException e) {
+                            Log.e("TAG", "File not found:" + e.getMessage());
+                            e.getStackTrace();
+                        } catch (IOException e) {
+                            Log.e("TAG", "I/O error writing file: " + e.getMessage());
+                            e.getStackTrace();
+                        }
+                    }
+                };
+                camera.lock();
+                camera.takePicture(null, null,null, pictureCallback);
+                camera.unlock();
             }
         };
+
         execute.submit(takePicture);
     }
 
-
-
-    public void saveImg(Bitmap bitmap){
-        File dir = new File(Environment.getExternalStorageDirectory().toString()+
-                '/'+getString(R.string.app_name));
-
-        if(!dir.exists()){dir.mkdirs();}
-        String name = System.currentTimeMillis() + ".png";
-        File file = new File(dir, name);
-        try{
-            saveToStream(bitmap, new FileOutputStream(file));
-            ContentValues values = new ContentValues();
-            values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
-            this.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void saveToStream(Bitmap bitmap, OutputStream outputStream){
-        if(outputStream != null){
-            try{
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-            }catch (Exception e){
-                e.printStackTrace();
+    private File getOutputMediaFile(int type)
+    {
+        File dir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), getPackageName());
+        if (!dir.exists())
+        {
+            if (!dir.mkdirs())
+            {
+                Log.e("TAG", "Failed to create storage directory.");
+                return null;
             }
         }
+        String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss", Locale.US).format(new Date());
+        if (type == MEDIA_TYPE_IMAGE)
+        {
+            return new File(dir.getPath() + File.separator + "IMG_"+ timeStamp + ".jpg");
+        }
+        else
+        {
+            return null;
+        }
     }
+
 
     @Override
     public void onPause(){
