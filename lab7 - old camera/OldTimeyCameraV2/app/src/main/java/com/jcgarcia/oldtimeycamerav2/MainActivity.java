@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     public void openCamera(){
         try{
             camera = open();
