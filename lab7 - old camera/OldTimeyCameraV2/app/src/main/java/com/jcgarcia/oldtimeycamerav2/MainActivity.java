@@ -11,7 +11,9 @@ import androidx.core.os.HandlerCompat;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -166,13 +168,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onTakePictureClicked() {
+        ContentResolver content = this.getContentResolver();
+
         Runnable takePicture = new Runnable() {
             @Override
             public void run() {
                 Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
                     @Override
                     public void onPictureTaken(byte[] bytes, Camera camera) {
-                        File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+                        File file = getOutputMediaFile(0);
                         if (file == null) {
                             Log.e("TAG", "Unable to store images");
                             return;
@@ -181,6 +185,11 @@ public class MainActivity extends AppCompatActivity {
                             FileOutputStream fos = new FileOutputStream(file);
                             fos.write(bytes);
                             fos.close();
+
+                            ContentValues values = new ContentValues();
+                            values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
+                            content.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
                         } catch (FileNotFoundException e) {
                             Log.e("TAG", "File not found:" + e.getMessage());
                             e.getStackTrace();
