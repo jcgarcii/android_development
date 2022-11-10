@@ -13,7 +13,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -59,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     public SurfaceView surface;
     public SurfaceHolder mHolder;
     public int _openCameraFlag = 0;
-    public static final String ACTION_NEW_PICTURE = Camera.ACTION_NEW_PICTURE;
     public Button button;
 
     @Override
@@ -75,6 +73,13 @@ public class MainActivity extends AppCompatActivity {
         execute = Executors.newFixedThreadPool(4);
         threadedHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
+        View.OnClickListener click = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onTakePictureClicked();
+            }
+        };
+
         button.setOnClickListener(click);
 
     }
@@ -82,30 +87,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        //Start Camera
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                openCamera();
-                _openCameraFlag = 1;
-                try {
-                    camera.setPreviewDisplay(mHolder);
-                    camera.startPreview();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        execute.submit(runnable);
+        openCamera();
     }
 
-    private View.OnClickListener click = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            onTakePictureClicked();
-        }
-    };
+
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -124,21 +109,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     public void openCamera(){
-        try{
-            camera = open();
-            //cameraParameters = camera.getParameters();
-        }
-        catch (Exception e){
-            Log.e("OldTimeyCameara", Log.getStackTraceString(e));
-        }
-        try{
-            cameraParameters = camera.getParameters();
-        }
-        catch (Exception e){
-            Log.e("OldTimeyCameara", Log.getStackTraceString(e));
-        }
-        camera.setDisplayOrientation(90);
+        //Start Camera
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    camera = open(0);
+                    //cameraParameters = camera.getParameters();
+                }
+                catch (Exception e){
+                    Log.e("OldTimeyCameara", Log.getStackTraceString(e));
+                }
+                try{
+                    cameraParameters = camera.getParameters();
+                }
+                catch (Exception e){
+                    Log.e("OldTimeyCameara", Log.getStackTraceString(e));
+                }
+                camera.setDisplayOrientation(90);
+                _openCameraFlag = 1;
+                try {
+                    camera.setPreviewDisplay(mHolder);
+                    camera.startPreview();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        execute.submit(runnable);
     }
 
     public static void setCameraDisplayOrientation(Activity activity,
@@ -168,14 +169,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void onTakePictureClicked() {
         ContentResolver content = this.getContentResolver();
-
         Runnable takePicture = new Runnable() {
             @Override
             public void run() {
                 Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
                     @Override
                     public void onPictureTaken(byte[] bytes, Camera camera) {
-                        File file = getOutputMediaFile(0);
+                        File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
                         if (file == null) {
                             Log.e("TAG", "Unable to store images");
                             return;
@@ -187,8 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
                             ContentValues values = new ContentValues();
                             values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
-                            content.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-
+                            //content.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
                         } catch (FileNotFoundException e) {
                             Log.e("TAG", "File not found:" + e.getMessage());
                             e.getStackTrace();
@@ -198,13 +197,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 };
-                camera.lock();
-                camera.takePicture(null, null,null, pictureCallback);
-                camera.unlock();
+                camera.takePicture(null, null, pictureCallback);
             }
         };
 
         execute.submit(takePicture);
+        //camera.stopPreview();
+        _openCameraFlag = 0;
+        openCamera();
     }
 
     private File getOutputMediaFile(int type)
