@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Object Scanner</string>
+    <string name="action">Take Picture!</string>
 </resources>
