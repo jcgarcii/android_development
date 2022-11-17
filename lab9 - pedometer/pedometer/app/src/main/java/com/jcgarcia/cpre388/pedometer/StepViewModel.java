@@ -4,23 +4,30 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class StepViewModel extends ViewModel {
-    private MutableLiveData<Float> stepLiveData = new MutableLiveData<>();
-    private final static Float RESET_COUNTER = 0f;
+    private MutableLiveData<Long> stepLiveData = new MutableLiveData<>();
+    private MutableLiveData<Long> sensorLiveData = new MutableLiveData<>();
 
-    public StepViewModel(){
-        stepLiveData.setValue(RESET_COUNTER);
-    }
+    private final static Long RESET_COUNTER = 0L;
 
-    public void storeData(Float steps){
+    public StepViewModel(){}
+
+    public void step_storeData(Long steps){
         stepLiveData.setValue(steps);
+    }
+    public void sen_storeData(Long steps){
+        sensorLiveData.setValue(steps);
     }
 
     public void release(){
         stepLiveData.setValue(RESET_COUNTER);
+        sensorLiveData.setValue(RESET_COUNTER);
     }
 
-    public MutableLiveData<Float> getStepLiveData(){
+    public MutableLiveData<Long> getStepLiveData(){
         return stepLiveData;
     }
 
+    public MutableLiveData<Long> getSensorLiveData() {
+        return sensorLiveData;
+    }
 }
