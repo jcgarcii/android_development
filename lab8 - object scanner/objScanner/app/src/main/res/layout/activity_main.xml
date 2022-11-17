@@ -6,10 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="190dp"
+        android:layout_marginTop="7dp"
+        android:background="@color/material_dynamic_neutral10"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@+id/container"
+        tools:layout_editor_absoluteX="38dp" />
+
     <FrameLayout
         android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="423dp"
+        android:layout_height="556dp"
         android:background="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -18,13 +29,8 @@
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="560dp">
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="match_parent"
-                android:layout_height="190dp"
-                android:textColor="@color/black" />
         </androidx.camera.view.PreviewView>
 
     </FrameLayout>

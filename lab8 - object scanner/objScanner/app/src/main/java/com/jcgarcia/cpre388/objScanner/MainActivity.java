@@ -85,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void analyze(@NonNull ImageProxy imageProxy)
             {
-                Toast.makeText(getBaseContext(), "HELLO WORLD", Toast.LENGTH_LONG).show();
                 @SuppressLint("UnsafeOptInUsageError") Image mediaImage = imageProxy.getImage();
                 if (mediaImage != null)
                 {
@@ -116,8 +115,8 @@ public class MainActivity extends AppCompatActivity {
                                 public void onFailure(@NonNull Exception e)
                                 {
                                     // Task failed with an exception
-                                    String msg = "It's not working bro ";
-                                    Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+                                    //String msg = "It's not working bro ";
+                                    //Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
                                 }
                             });
                 }
@@ -125,6 +124,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview);
+        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, imageAnalysis, preview);
     }
 }

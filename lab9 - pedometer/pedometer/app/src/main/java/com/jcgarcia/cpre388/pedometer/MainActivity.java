@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         final Observer<Float> stepObserver = new Observer<Float>(){
             @Override
             public void onChanged(@Nullable final Float steps){
-
             }
         };
 
@@ -45,8 +44,4 @@ public class MainActivity extends AppCompatActivity {
         custom.setText("0 Steps");
         viewModel.release();
     }
-
-
-
-
 }
