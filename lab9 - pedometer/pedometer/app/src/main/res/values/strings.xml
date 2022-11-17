@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">pedometer</string>
+    <string name="reset_button">Reset Steps!</string>
+    <string name="default_text">0 Steps</string>
 </resources>

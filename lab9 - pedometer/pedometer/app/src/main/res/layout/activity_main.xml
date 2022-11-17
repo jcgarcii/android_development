@@ -6,13 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/reset"
         android:layout_width="match_parent"
         android:layout_height="100sp"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="1dp"
-        android:text="Button"
+        android:text="@string/reset_button"
+        android:background="@color/white"
+        android:textColor="@color/black"
+        android:onClick="onReset"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,8 +35,12 @@
             android:id="@+id/builtin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="100sp"
+            android:textSize="30sp"
+            android:textColor="@color/white"
+            android:gravity="center"
             android:layout_weight="1"
-            android:text="TextView" />
+            android:text="@string/default_text" />
     </LinearLayout>
 
     <LinearLayout
@@ -50,8 +57,12 @@
             android:id="@+id/custom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="100sp"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="30sp"
             android:layout_weight="1"
-            android:text="TextView" />
+            android:text="@string/default_text" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
