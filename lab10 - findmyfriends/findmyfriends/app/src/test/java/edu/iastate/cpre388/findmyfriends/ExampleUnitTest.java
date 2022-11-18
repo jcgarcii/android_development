@@ -1,4 +1,4 @@
-package com.jcgarcia.cpre388.findmyfriends;
+package edu.iastate.cpre388.findmyfriends;
 
 import org.junit.Test;
 

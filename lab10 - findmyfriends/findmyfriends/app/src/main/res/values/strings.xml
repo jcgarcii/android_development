@@ -1,3 +1,16 @@
 <resources>
-    <string name="app_name">findmyfriends</string>
+    <string name="app_name">FindMyFriends</string>
+    <string name="title_home">Nearby</string>
+    <string name="title_dashboard">Friend List</string>
+    <string name="title_notifications">My Info</string>
+    <string name="add_friend_button">Add Friend</string>
+
+    <string name="add_friend_dialog_title">Add Friend</string>
+    <string name="add_friend_positive_text">Add</string>
+    <string name="add_friend_negative_text">Cancel</string>
+    <string name="add_friend_name_hint">Friend\'s name</string>
+    <string name="add_friend_addr_hint">Friend\'s Bluetooth MAC address</string>
+    <string name="remove_friend_button">Remove</string>
+
+    <string name="no_bluetooth_text">Bluetooth not available on this device!</string>
 </resources>

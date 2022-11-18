@@ -1,4 +1,4 @@
-package com.jcgarcia.cpre388.findmyfriends;
+package edu.iastate.cpre388.findmyfriends;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.jcgarcia.cpre388.findmyfriends", appContext.getPackageName());
+        assertEquals("edu.iastate.cpre388.findmyfriends", appContext.getPackageName());
     }
 }
