@@ -1,5 +1,7 @@
 package com.jcgarcia.cpre388.pedometer;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,12 +37,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Handler threadedHandler;
     private Sensor accel;
     private TextView actual;
+    private Boolean flag;
     private TextView custom;
     private StepViewModel custom_viewModel;
-    private StepViewModel sensor_viewModel;
+    private SensorViewModel sensor_viewModel;
     private Long actual_steps = 0L;
     private Long calc_steps = 0L;
-    
+    private Double stepThreshold;
+    private Float currentvectorSum;
+    private Boolean inStep;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         executor = Executors.newFixedThreadPool(2);
         threadedHandler = HandlerCompat.createAsync(Looper.getMainLooper());
+        stepThreshold = 1.0d;
+        flag = false;
+        inStep = false;
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         built_in_sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
@@ -56,27 +66,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //Custom Method of Counting Steps listener:
         custom_viewModel = new ViewModelProvider(this).get(StepViewModel.class);
-        sensor_viewModel = new ViewModelProvider(this).get(StepViewModel.class);
+        sensor_viewModel = new ViewModelProvider(this).get(SensorViewModel.class);
         sensor_viewModel.release();
         custom_viewModel.release();
 
         final Observer<Long> stepObserver = new Observer<Long>(){
             @Override
             public void onChanged(@Nullable final Long steps){
-
+                String _set;
+                if(flag){
+                    _set = String.format("RESET");
+                    flag = false;
+                }
+                else{
+                    _set = String.format("Calc Steps: " + steps.toString());
+                }
+                custom.setText(_set);
             }
         };
         //Actual built in sensor listener:
         final Observer<Long> sensorObserver = new Observer<Long>(){
             @Override
             public void onChanged(@Nullable final Long steps){
-                String set = String.format("Steps: " + steps.toString());
+                String set;
+                if(flag){
+                    set = String.format("RESET");
+                    flag = false;
+                }else{
+                    set = String.format("Steps: " + steps.toString());
+                }
                 actual.setText(set);
             }
         };
 
         custom_viewModel.getStepLiveData().observe(this, stepObserver);
-        sensor_viewModel.getStepLiveData().observe(this, sensorObserver);
+        sensor_viewModel.getSensorLiveData().observe(this, sensorObserver);
     }
 
     @Override
@@ -87,10 +111,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void onReset(View view){
-        actual.setText("STEPS RESET: 0 STEPS");
-        custom.setText("STEPS RESET: 0 STEPS");
         custom_viewModel.release();
         sensor_viewModel.release();
+
+        calc_steps = 0L;
+        actual_steps = 0L;
+
+        flag = true;
         Toast.makeText(getBaseContext(), "Reset Steps", Toast.LENGTH_LONG).show();
     }
 
@@ -104,24 +131,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             value = (int) values[0];
         }
         if (sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
-            Runnable step = new Runnable() {
-                @Override
-                public void run() {
-                    actual_steps = actual_steps + 1;
-                    sensor_viewModel.step_storeData(actual_steps);
-                }
-            };
-            executor.submit(step);
+            actual_steps = actual_steps + 1;
+            sensor_viewModel.storeData(actual_steps);
         }
 
         if(sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            Runnable acc = new Runnable() {
-                @Override
-                public void run() {
+            float x = sensorEvent.values[0];
+            float y = sensorEvent.values[1];
+            float z = sensorEvent.values[2];
 
-                }
-            };
-            executor.submit(acc);
+            currentvectorSum = (x*x + y*y + z*z);
+            if(currentvectorSum < 100 && inStep==false){
+                inStep = true;
+            }
+            if(currentvectorSum > 125 && inStep==true){
+                inStep = false;
+                calc_steps++;
+                custom_viewModel.step_storeData(calc_steps);
+                Log.d("TAG_ACCELEROMETER", "\t" + calc_steps);
+            }
+
         }
 
     }
