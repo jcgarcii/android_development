@@ -13,6 +13,8 @@ import java.util.concurrent.Executor;
 public class FMFViewModel extends ViewModel {
 
     private FriendDatabase db;
+    private MutableLiveData<List<String>> currentAddr = new MutableLiveData<>();
+    private List<String> addresses;
     private Executor executor;
 
     public FMFViewModel(Context context, Executor executor) {
@@ -38,6 +40,27 @@ public class FMFViewModel extends ViewModel {
         });
     }
 
+    public void setAddresses(String addr){
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                addresses.add(addr);
+                currentAddr.setValue(addresses);
+            }
+        });
+    }
+
+    public void clearAddresses(){
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                addresses.clear();
+                currentAddr.setValue(addresses);
+            }
+        });
+    }
+
+
     public void deleteFriend(Friend friend) {
         executor.execute(new Runnable() {
             @Override
@@ -55,6 +78,8 @@ public class FMFViewModel extends ViewModel {
             }
         });
     }
+
+    public LiveData<List<String>> getCurrentAddr(){return currentAddr;}
 
     public LiveData<List<Friend>> getFriendsList() {
         return db.friendDao().getAll();
