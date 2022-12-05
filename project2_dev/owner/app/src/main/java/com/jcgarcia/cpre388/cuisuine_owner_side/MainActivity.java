@@ -1,20 +1,16 @@
 package com.jcgarcia.cpre388.cuisuine_owner_side;
 
 import android.os.Bundle;
+import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
-
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-
+import com.jcgarcia.cpre388.cuisuine_owner_side.databinding.ActivityOwnerBinding;
 import com.jcgarcia.cpre388.cuisuine_owner_side.ui.main.SectionsPagerAdapter;
-import com.jcgarcia.cpre388.cuisuine_owner_side.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
